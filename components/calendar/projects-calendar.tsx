@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   addDays,
   addMonths,
@@ -12,84 +13,27 @@ import {
   startOfMonth,
   startOfWeek,
   subMonths,
+  parseISO,
 } from "date-fns"
 import { es } from "date-fns/locale"
-import { ArrowLeft, ArrowRight, Edit } from "lucide-react"
+import { ArrowLeft, ArrowRight, Edit, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 import { cn } from "@/lib/utils"
-
-// Mock data for the calendar
-const events = [
-  {
-    id: "1",
-    title: "Evaluación de riesgos operativos",
-    type: "project",
-    startDate: new Date(2023, 4, 5),
-    endDate: new Date(2023, 5, 20),
-    professionals: [
-      { id: "1", name: "María González", avatar: "/placeholder.svg?height=32&width=32" },
-      { id: "4", name: "Javier López", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
-    client: "Banco Nacional",
-    color: "bg-blue-100 border-blue-300 text-blue-700",
-  },
-  {
-    id: "2",
-    title: "Implementación de controles",
-    type: "project",
-    startDate: new Date(2023, 4, 12),
-    endDate: new Date(2023, 5, 25),
-    professionals: [
-      { id: "2", name: "Carlos Martínez", avatar: "/placeholder.svg?height=32&width=32" },
-      { id: "4", name: "Javier López", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
-    client: "Seguros del Sur",
-    color: "bg-green-100 border-green-300 text-green-700",
-  },
-  {
-    id: "3",
-    title: "Auditoría de cumplimiento",
-    type: "project",
-    startDate: new Date(2023, 4, 18),
-    endDate: new Date(2023, 6, 5),
-    professionals: [
-      { id: "3", name: "Laura Rodríguez", avatar: "/placeholder.svg?height=32&width=32" },
-      { id: "5", name: "Ana Torres", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
-    client: "Comercial Textil",
-    color: "bg-amber-100 border-amber-300 text-amber-700",
-  },
-  {
-    id: "4",
-    title: "Entrega Informe Preliminar",
-    type: "milestone",
-    date: new Date(2023, 4, 25),
-    project: "Evaluación de riesgos operativos",
-    color: "bg-red-100 border-red-300 text-red-700",
-  },
-  {
-    id: "5",
-    title: "Reunión de Revisión",
-    type: "milestone",
-    date: new Date(2023, 5, 10),
-    project: "Implementación de controles",
-    color: "bg-purple-100 border-purple-300 text-purple-700",
-  },
-]
-
-interface CalendarEvent {
-  id: string
-  title: string
-  type: string
-  startDate?: Date
-  endDate?: Date
-  date?: Date
-  professionals?: Array<{ id: string; name: string; avatar: string }>
-  client?: string
-  project?: string
-  color: string
-}
+import LocalStorageService, { type CalendarEvent } from "@/lib/local-storage-service"
 
 interface CalendarDayProps {
   day: Date
@@ -101,20 +45,20 @@ interface CalendarDayProps {
 function CalendarDay({ day, month, events, onEventClick }: CalendarDayProps) {
   const dayEvents = events
     .filter((event) => {
-      if (event.type === "milestone") {
-        return event.date && isSameDay(event.date, day)
+      if (event.type === "milestone" || event.type === "meeting") {
+        return event.date && isSameDay(parseISO(event.date), day)
       } else {
-        return event.startDate && event.endDate && day >= event.startDate && day <= event.endDate
+        return event.startDate && event.endDate && day >= parseISO(event.startDate) && day <= parseISO(event.endDate)
       }
     })
     .slice(0, 3)
 
   const moreEvents =
     events.filter((event) => {
-      if (event.type === "milestone") {
-        return event.date && isSameDay(event.date, day)
+      if (event.type === "milestone" || event.type === "meeting") {
+        return event.date && isSameDay(parseISO(event.date), day)
       } else {
-        return event.startDate && event.endDate && day >= event.startDate && day <= event.endDate
+        return event.startDate && event.endDate && day >= parseISO(event.startDate) && day <= parseISO(event.endDate)
       }
     }).length > 3
 
@@ -139,15 +83,34 @@ function CalendarDay({ day, month, events, onEventClick }: CalendarDayProps) {
             {event.title}
           </button>
         ))}
-        {moreEvents && <div className="text-xs text-muted-foreground">+ {events.length - 3} más</div>}
+        {moreEvents && <div className="text-xs text-muted-foreground">+ más eventos</div>}
       </div>
     </div>
   )
 }
 
 export function ProjectsCalendar() {
+  const router = useRouter()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [showAddEventDialog, setShowAddEventDialog] = useState(false)
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    type: "milestone" as "milestone" | "meeting" | "project",
+    date: new Date().toISOString().split("T")[0],
+    project: "",
+    color: "bg-blue-100 border-blue-300 text-blue-700",
+  })
+
+  useEffect(() => {
+    async function fetchCalendarEvents() {
+      const response = await fetch("/public/data/calendar-events.json") // Ajustar la ruta al archivo JSON
+      const data = await response.json()
+      setEvents(data)
+    }
+    fetchCalendarEvents()
+  }, [])
 
   const handleNextMonth = () => {
     setCurrentMonth(addMonths(currentMonth, 1))
@@ -159,6 +122,35 @@ export function ProjectsCalendar() {
 
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event)
+  }
+
+  const handleAddEvent = () => {
+    try {
+      const storageService = LocalStorageService.getInstance()
+      const savedEvent = storageService.saveCalendarEvent(newEvent)
+
+      setEvents([...events, savedEvent])
+      setShowAddEventDialog(false)
+      setNewEvent({
+        title: "",
+        type: "milestone",
+        date: new Date().toISOString().split("T")[0],
+        project: "",
+        color: "bg-blue-100 border-blue-300 text-blue-700",
+      })
+
+      toast({
+        title: "Evento creado",
+        description: "El evento ha sido añadido al calendario",
+      })
+    } catch (error) {
+      console.error("Error al guardar evento:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el evento",
+        variant: "destructive",
+      })
+    }
   }
 
   // Generate calendar days
@@ -177,7 +169,7 @@ export function ProjectsCalendar() {
       days.push(
         <CalendarDay
           key={day.toString()}
-          day={day}
+          day={new Date(day)}
           month={currentMonth}
           events={events}
           onEventClick={handleEventClick}
@@ -198,6 +190,10 @@ export function ProjectsCalendar() {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">{format(currentMonth, "MMMM yyyy", { locale: es })}</h2>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowAddEventDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Evento
+          </Button>
           <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -237,7 +233,8 @@ export function ProjectsCalendar() {
                 <div>
                   {selectedEvent.startDate && selectedEvent.endDate && (
                     <span>
-                      {format(selectedEvent.startDate, "dd/MM/yyyy")} - {format(selectedEvent.endDate, "dd/MM/yyyy")}
+                      {format(parseISO(selectedEvent.startDate), "dd/MM/yyyy")} -{" "}
+                      {format(parseISO(selectedEvent.endDate), "dd/MM/yyyy")}
                     </span>
                   )}
                 </div>
@@ -261,11 +258,13 @@ export function ProjectsCalendar() {
             <div className="space-y-3">
               <div>
                 <div className="text-sm font-medium">Tipo</div>
-                <div>Hito</div>
+                <div>
+                  <Badge variant="outline">{selectedEvent.type === "milestone" ? "Hito" : "Reunión"}</Badge>
+                </div>
               </div>
               <div>
                 <div className="text-sm font-medium">Fecha</div>
-                <div>{selectedEvent.date && format(selectedEvent.date, "dd/MM/yyyy")}</div>
+                <div>{selectedEvent.date && format(parseISO(selectedEvent.date), "dd/MM/yyyy")}</div>
               </div>
               <div>
                 <div className="text-sm font-medium">Proyecto</div>
@@ -275,6 +274,80 @@ export function ProjectsCalendar() {
           )}
         </div>
       )}
+
+      <Dialog open={showAddEventDialog} onOpenChange={setShowAddEventDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Añadir Nuevo Evento</DialogTitle>
+            <DialogDescription>Crea un nuevo evento en el calendario</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Título</label>
+              <Input
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                placeholder="Título del evento"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tipo</label>
+              <Select
+                value={newEvent.type}
+                onValueChange={(value) =>
+                  setNewEvent({ ...newEvent, type: value as "milestone" | "meeting" | "project" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="milestone">Hito</SelectItem>
+                  <SelectItem value="meeting">Reunión</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Fecha</label>
+              <Input
+                type="date"
+                value={newEvent.date}
+                onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Proyecto</label>
+              <Input
+                value={newEvent.project}
+                onChange={(e) => setNewEvent({ ...newEvent, project: e.target.value })}
+                placeholder="Nombre del proyecto"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Color</label>
+              <Select value={newEvent.color} onValueChange={(value) => setNewEvent({ ...newEvent, color: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar color" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bg-blue-100 border-blue-300 text-blue-700">Azul</SelectItem>
+                  <SelectItem value="bg-green-100 border-green-300 text-green-700">Verde</SelectItem>
+                  <SelectItem value="bg-red-100 border-red-300 text-red-700">Rojo</SelectItem>
+                  <SelectItem value="bg-amber-100 border-amber-300 text-amber-700">Ámbar</SelectItem>
+                  <SelectItem value="bg-purple-100 border-purple-300 text-purple-700">Púrpura</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddEventDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddEvent}>Guardar Evento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Toaster />
     </div>
   )
 }

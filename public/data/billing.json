@@ -1,0 +1,18 @@
+[
+  {
+    "id": "1",
+    "projectId": "101",
+    "client": "Banco Nacional",
+    "amount": 50000,
+    "status": "Pendiente",
+    "dueDate": "2023-12-01"
+  },
+  {
+    "id": "2",
+    "projectId": "102",
+    "client": "Seguros del Sur",
+    "amount": 75000,
+    "status": "Pagado",
+    "dueDate": "2023-11-15"
+  }
+]

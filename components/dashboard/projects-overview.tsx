@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -6,29 +9,16 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
 export function ProjectsOverview() {
-  const projects = [
-    {
-      id: "1",
-      name: "Evaluación de riesgos operativos",
-      client: "Banco Nacional",
-      progress: 75,
-      status: "En ejecución",
-    },
-    {
-      id: "2",
-      name: "Implementación de controles",
-      client: "Seguros del Sur",
-      progress: 45,
-      status: "En ejecución",
-    },
-    {
-      id: "3",
-      name: "Auditoría de cumplimiento",
-      client: "Comercial Textil",
-      progress: 20,
-      status: "En preparación",
-    },
-  ]
+  const [projects, setProjects] = useState([])
+
+  useEffect(() => {
+    async function fetchProjects() {
+      const response = await fetch("/public/data/projects.json") // Ajustar la ruta al archivo JSON
+      const data = await response.json()
+      setProjects(data)
+    }
+    fetchProjects()
+  }, [])
 
   return (
     <Card className="col-span-1">

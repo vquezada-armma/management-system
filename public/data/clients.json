@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "Banco Nacional",
+    "sector": "Banca y Finanzas",
+    "address": "Av. Principal 123, Ciudad",
+    "description": "Banco líder en servicios financieros.",
+    "contactName": "Juan Pérez",
+    "contactPosition": "Gerente de Riesgos",
+    "contactEmail": "jperez@banco.com",
+    "contactPhone": "+1 (555) 123-4567",
+    "activeProjects": 2
+  },
+  {
+    "id": "2",
+    "name": "Seguros del Sur",
+    "sector": "Seguros",
+    "address": "Calle Secundaria 456, Ciudad",
+    "description": "Empresa líder en seguros generales.",
+    "contactName": "María Rodríguez",
+    "contactPosition": "Directora de Operaciones",
+    "contactEmail": "mrodriguez@seguros.com",
+    "contactPhone": "+1 (555) 987-6543",
+    "activeProjects": 1
+  }
+]

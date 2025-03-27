@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "name": "Evaluación de riesgos operativos",
+    "client": "Banco Nacional",
+    "clientContact": "Juan Pérez",
+    "description": "Evaluación de riesgos operativos en procesos clave.",
+    "manager": "María González",
+    "status": "En ejecución",
+    "progress": 75,
+    "billingProgress": 50,
+    "startDate": "2023-01-01",
+    "endDate": "2023-12-31",
+    "actualEndDate": null,
+    "professionals": [
+      { "id": "1", "name": "María González", "role": "Consultor Senior" }
+    ],
+    "documents": [],
+    "relatedOpportunity": "1"
+  },
+  {
+    "id": "2",
+    "name": "Implementación de controles",
+    "client": "Seguros del Sur",
+    "clientContact": "María Rodríguez",
+    "description": "Implementación de controles para mitigación de riesgos.",
+    "manager": "Carlos Martínez",
+    "status": "En preparación",
+    "progress": 45,
+    "billingProgress": 20,
+    "startDate": "2023-02-01",
+    "endDate": "2023-11-30",
+    "actualEndDate": null,
+    "professionals": [],
+    "documents": [],
+    "relatedOpportunity": "2"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "María González",
+    "role": "Consultor Senior",
+    "specialty": "Riesgos Operativos",
+    "email": "mgonzalez@riskconsulting.com",
+    "phone": "+1 (555) 123-4567",
+    "position": "Consultor Senior de Riesgos Operativos",
+    "utilization": 85,
+    "projects": ["1"],
+    "avatar": "/placeholder.svg?height=40&width=40"
+  },
+  {
+    "id": "2",
+    "name": "Carlos Martínez",
+    "role": "Analista de Riesgos",
+    "specialty": "Riesgos Tecnológicos",
+    "email": "cmartinez@riskconsulting.com",
+    "phone": "+1 (555) 987-6543",
+    "position": "Analista de Riesgos",
+    "utilization": 70,
+    "projects": ["2"],
+    "avatar": "/placeholder.svg?height=40&width=40"
+  }
+]

@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,16 +10,73 @@ import { FormDescription, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster"
+import LocalStorageService from "@/lib/local-storage-service"
 
 export default function NewClientPage() {
   const router = useRouter()
+  const [formData, setFormData] = useState({
+    name: "",
+    sector: "",
+    address: "",
+    description: "",
+    contactName: "",
+    contactPosition: "",
+    contactEmail: "",
+    contactPhone: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, sector: value }))
+  }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    // Aquí iría la lógica para guardar el cliente
-    console.log("Cliente guardado")
-    // Redireccionar a la lista de clientes
-    router.push("/clients")
+    setIsSubmitting(true)
+
+    try {
+      // Crear el objeto de cliente
+      const clientData = {
+        name: formData.name,
+        sector: formData.sector,
+        address: formData.address,
+        description: formData.description,
+        contactName: formData.contactName,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        activeProjects: 0,
+      }
+
+      // Guardar en el almacenamiento local
+      const storageService = LocalStorageService.getInstance()
+      const savedClient = storageService.saveClient(clientData)
+
+      toast({
+        title: "Cliente creado",
+        description: "El cliente ha sido creado exitosamente",
+      })
+
+      // Redireccionar a la lista de clientes
+      setTimeout(() => {
+        router.push("/clients")
+      }, 1500)
+    } catch (error) {
+      console.error("Error al guardar el cliente:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear el cliente",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -33,25 +92,31 @@ export default function NewClientPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <FormLabel htmlFor="client-name">Nombre del Cliente</FormLabel>
-                <Input id="client-name" placeholder="Ej: Banco Nacional" required />
+                <FormLabel htmlFor="name">Nombre del Cliente</FormLabel>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Banco Nacional"
+                  required
+                />
                 <FormDescription>Nombre completo de la empresa cliente</FormDescription>
               </div>
 
               <div className="space-y-2">
                 <FormLabel>Sector</FormLabel>
-                <Select required>
+                <Select value={formData.sector} onValueChange={handleSelectChange} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar sector" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="banking">Banca y Finanzas</SelectItem>
-                    <SelectItem value="insurance">Seguros</SelectItem>
-                    <SelectItem value="retail">Comercio</SelectItem>
-                    <SelectItem value="manufacturing">Manufactura</SelectItem>
-                    <SelectItem value="technology">Tecnología</SelectItem>
-                    <SelectItem value="healthcare">Salud</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
+                    <SelectItem value="Banca y Finanzas">Banca y Finanzas</SelectItem>
+                    <SelectItem value="Seguros">Seguros</SelectItem>
+                    <SelectItem value="Comercio">Comercio</SelectItem>
+                    <SelectItem value="Manufactura">Manufactura</SelectItem>
+                    <SelectItem value="Tecnología">Tecnología</SelectItem>
+                    <SelectItem value="Salud">Salud</SelectItem>
+                    <SelectItem value="Otro">Otro</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>Industria o sector al que pertenece el cliente</FormDescription>
@@ -60,7 +125,12 @@ export default function NewClientPage() {
 
             <div className="space-y-2">
               <FormLabel htmlFor="address">Dirección</FormLabel>
-              <Input id="address" placeholder="Ej: Av. Principal 123, Ciudad" />
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="Ej: Av. Principal 123, Ciudad"
+              />
               <FormDescription>Dirección física de la empresa</FormDescription>
             </div>
 
@@ -68,6 +138,8 @@ export default function NewClientPage() {
               <FormLabel htmlFor="description">Descripción</FormLabel>
               <Textarea
                 id="description"
+                value={formData.description}
+                onChange={handleInputChange}
                 placeholder="Breve descripción del cliente y su negocio"
                 className="min-h-[100px]"
               />
@@ -78,26 +150,49 @@ export default function NewClientPage() {
               <h3 className="text-lg font-medium mb-4">Contacto Principal</h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <FormLabel htmlFor="contact-name">Nombre del Contacto</FormLabel>
-                  <Input id="contact-name" placeholder="Ej: Juan Pérez" required />
+                  <FormLabel htmlFor="contactName">Nombre del Contacto</FormLabel>
+                  <Input
+                    id="contactName"
+                    value={formData.contactName}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Juan Pérez"
+                    required
+                  />
                   <FormDescription>Nombre completo de la persona de contacto</FormDescription>
                 </div>
 
                 <div className="space-y-2">
-                  <FormLabel htmlFor="contact-position">Cargo</FormLabel>
-                  <Input id="contact-position" placeholder="Ej: Gerente de Riesgos" />
+                  <FormLabel htmlFor="contactPosition">Cargo</FormLabel>
+                  <Input
+                    id="contactPosition"
+                    value={formData.contactPosition}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Gerente de Riesgos"
+                  />
                   <FormDescription>Posición que ocupa en la empresa</FormDescription>
                 </div>
 
                 <div className="space-y-2">
-                  <FormLabel htmlFor="contact-email">Correo Electrónico</FormLabel>
-                  <Input id="contact-email" type="email" placeholder="Ej: jperez@empresa.com" required />
+                  <FormLabel htmlFor="contactEmail">Correo Electrónico</FormLabel>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={handleInputChange}
+                    placeholder="Ej: jperez@empresa.com"
+                    required
+                  />
                   <FormDescription>Correo electrónico de contacto</FormDescription>
                 </div>
 
                 <div className="space-y-2">
-                  <FormLabel htmlFor="contact-phone">Teléfono</FormLabel>
-                  <Input id="contact-phone" placeholder="Ej: +1 (555) 123-4567" />
+                  <FormLabel htmlFor="contactPhone">Teléfono</FormLabel>
+                  <Input
+                    id="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={handleInputChange}
+                    placeholder="Ej: +1 (555) 123-4567"
+                  />
                   <FormDescription>Número telefónico de contacto</FormDescription>
                 </div>
               </div>
@@ -107,10 +202,13 @@ export default function NewClientPage() {
             <Button variant="outline" type="button" onClick={() => router.push("/clients")}>
               Cancelar
             </Button>
-            <Button type="submit">Crear Cliente</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Guardando..." : "Crear Cliente"}
+            </Button>
           </CardFooter>
         </form>
       </Card>
+      <Toaster />
     </div>
   )
 }

@@ -2,18 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  BarChart3,
-  Briefcase,
-  Building,
-  Calendar,
-  ClipboardList,
-  CreditCard,
-  FileText,
-  Home,
-  PieChart,
-  Users,
-} from "lucide-react"
+import { BarChart3, Briefcase, Building, Calendar, CreditCard, Home, PieChart, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -49,11 +38,6 @@ const sidebarItems = [
     icon: CreditCard,
   },
   {
-    title: "Contratos",
-    href: "/contracts",
-    icon: FileText,
-  },
-  {
     title: "Calendario",
     href: "/calendar",
     icon: Calendar,
@@ -62,11 +46,6 @@ const sidebarItems = [
     title: "Reportes",
     href: "/reports",
     icon: BarChart3,
-  },
-  {
-    title: "Administración",
-    href: "/admin",
-    icon: ClipboardList,
   },
 ]
 

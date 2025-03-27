@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1",
+    "name": "Evaluación de riesgos operativos",
+    "client": "Banco Nacional",
+    "value": 50000,
+    "stage": "Cierre"
+  },
+  {
+    "id": "2",
+    "name": "Implementación de controles",
+    "client": "Seguros del Sur",
+    "value": 75000,
+    "stage": "Negociación"
+  }
+]

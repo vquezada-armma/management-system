@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,72 +16,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-// Mock data for demonstration purposes
-const professionalsData = [
-  {
-    id: "1",
-    name: "María González",
-    role: "Consultor Senior",
-    utilization: 85,
-    projects: [
-      { id: "p1", name: "Evaluación de riesgos operativos" },
-      { id: "p2", name: "Implementación de controles" },
-      { id: "p3", name: "Auditoría de cumplimiento" },
-    ],
-    specialty: "Riesgos Operativos",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "2",
-    name: "Carlos Martínez",
-    role: "Analista de Riesgos",
-    utilization: 70,
-    projects: [
-      { id: "p2", name: "Implementación de controles" },
-      { id: "p4", name: "Plan de continuidad de negocio" },
-    ],
-    specialty: "Riesgos Tecnológicos",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "3",
-    name: "Laura Rodríguez",
-    role: "Consultor Junior",
-    utilization: 60,
-    projects: [
-      { id: "p3", name: "Auditoría de cumplimiento" },
-      { id: "p5", name: "Análisis de vulnerabilidades" },
-    ],
-    specialty: "Cumplimiento Regulatorio",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "4",
-    name: "Javier López",
-    role: "Consultor Senior",
-    utilization: 90,
-    projects: [
-      { id: "p1", name: "Evaluación de riesgos operativos" },
-      { id: "p2", name: "Implementación de controles" },
-      { id: "p4", name: "Plan de continuidad de negocio" },
-      { id: "p5", name: "Análisis de vulnerabilidades" },
-    ],
-    specialty: "Gestión de Riesgos",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "5",
-    name: "Ana Torres",
-    role: "Analista de Riesgos",
-    utilization: 45,
-    projects: [{ id: "p3", name: "Auditoría de cumplimiento" }],
-    specialty: "Riesgos Financieros",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-]
-
 export function ProfessionalsList() {
-  const [professionals, setProfessionals] = useState(professionalsData)
+  const [professionals, setProfessionals] = useState([])
+
+  useEffect(() => {
+    async function fetchProfessionals() {
+      const response = await fetch("/public/data/professionals.json")
+      const data = await response.json()
+      setProfessionals(data)
+    }
+    fetchProfessionals()
+  }, [])
 
   return (
     <div className="rounded-md border">
@@ -123,8 +68,8 @@ export function ProfessionalsList() {
                       professional.utilization > 80
                         ? "bg-red-500"
                         : professional.utilization > 60
-                          ? "bg-amber-500"
-                          : "bg-green-500"
+                        ? "bg-amber-500"
+                        : "bg-green-500"
                     }
                   />
                   <span className="text-xs text-muted-foreground">{professional.utilization}%</span>

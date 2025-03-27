@@ -1,13 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { ProjectsCalendar } from "@/components/calendar/projects-calendar"
 import { CalendarFilters } from "@/components/calendar/calendar-filters"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const [events, setEvents] = useState([])
+
+  useEffect(() => {
+    async function fetchCalendarEvents() {
+      const response = await fetch("/public/data/calendar-events.json") // Ajustar la ruta al archivo JSON
+      const data = await response.json()
+      setEvents(data)
+    }
+    fetchCalendarEvents()
+  }, [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,6 +58,7 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
+      <Toaster />
     </div>
   )
 }
